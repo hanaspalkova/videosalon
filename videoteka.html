@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Videotéka</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #6d28d9;
+      --primary-light: #ede9fe;
+      --primary-mid: #c4b5fd;
+      --success: #059669;
+      --success-light: #d1fae5;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --warning: #d97706;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .header-logo i { width: 22px; height: 22px; }
+
+    .header-stats {
+      font-size: 13px;
+      color: var(--gray-500);
+      padding: 4px 10px;
+      background: var(--gray-100);
+      border-radius: 20px;
+    }
+
+    .header-actions { display: flex; gap: 8px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn i { width: 15px; height: 15px; flex-shrink: 0; }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
+    .btn-secondary:hover { background: var(--gray-200); }
+
+    .btn-ghost { background: transparent; color: var(--gray-500); padding: 5px 8px; }
+    .btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
+
+    .btn-danger { background: transparent; color: var(--danger); padding: 5px 8px; }
+    .btn-danger:hover { background: var(--danger-light); }
+
+    /* ── Main container ── */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+    }
+
+    /* ── Add form ── */
+    .add-form {
+      background: white;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .add-form-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1.5fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+
+    .form-group label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      padding: 9px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.15s;
+      font-family: inherit;
+      color: var(--gray-900);
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+    }
+
+    .form-error {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ── Search & filters ── */
+    .search-section {
+      background: white;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .search-wrap {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 35px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+    }
+
+    .tag-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .tag-filter-label {
+      font-size: 11px;
+      color: var(--gray-400);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      align-self: center;
+      margin-right: 2px;
+    }
+
+    .tag-chip {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--gray-200);
+      background: var(--gray-50);
+      color: var(--gray-500);
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .tag-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .tag-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* ── Columns ── */
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .column {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .column-icon { width: 18px; height: 18px; }
+
+    .column-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-700);
+      flex: 1;
+    }
+
+    .column-count {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+
+    .column[data-status="to-watch"] .column-count { background: var(--primary-light); color: var(--primary); }
+    .column[data-status="watched"] .column-count { background: var(--success-light); color: var(--success); }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      min-height: 100px;
+      border-radius: 8px;
+      transition: background 0.15s, outline 0.15s;
+    }
+
+    .drop-zone.drag-over {
+      background: var(--primary-light);
+      outline: 2px dashed var(--primary-mid);
+      outline-offset: -2px;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px 20px;
+      color: var(--gray-400);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .empty-state i { width: 36px; height: 36px; margin-bottom: 10px; opacity: 0.4; }
+    .empty-state p { font-size: 13px; line-height: 1.5; }
+
+    /* ── Video card ── */
+    .video-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      cursor: grab;
+      transition: box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
+      user-select: none;
+    }
+
+    .video-card:last-child { margin-bottom: 0; }
+    .video-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.09); border-color: var(--gray-300); }
+
+    .video-card.dragging { opacity: 0.35; cursor: grabbing; }
+
+    .video-card.drop-before {
+      border-top: 3px solid var(--primary);
+    }
+
+    .video-card.drop-after {
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .card-thumb-wrap {
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      background: var(--gray-200);
+    }
+
+    .card-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.15s;
+    }
+
+    .card-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .card-thumb-overlay i { width: 36px; height: 36px; color: white; }
+
+    .card-thumb-wrap:hover .card-thumb-overlay { opacity: 1; }
+
+    .card-body { padding: 10px 12px; }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 7px;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .tag-badge {
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding-top: 8px;
+      border-top: 1px solid var(--gray-100);
+    }
+
+    .card-spacer { flex: 1; }
+
+    .toggle-watched-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--gray-500);
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .toggle-watched-btn i { width: 13px; height: 13px; }
+    .toggle-watched-btn:hover { background: var(--gray-100); color: var(--gray-700); }
+
+    /* ── Modals ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal {
+      background: white;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 820px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-sm { max-width: 480px; }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--gray-100);
+      flex-shrink: 0;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-900);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 18px;
+      border-top: 1px solid var(--gray-100);
+      flex-shrink: 0;
+    }
+
+    .video-embed {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border: none;
+      border-radius: 8px;
+      background: #000;
+    }
+
+    .edit-group { margin-bottom: 14px; }
+
+    .edit-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+
+    .edit-group input,
+    .edit-group textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      color: var(--gray-900);
+      resize: vertical;
+      transition: all 0.15s;
+    }
+
+    .edit-group input:focus,
+    .edit-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+    }
+
+    /* ── Toast notifications ── */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 16px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      z-index: 400;
+      animation: toastIn 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .toast i { width: 15px; height: 15px; }
+    .toast.success { background: var(--success); color: white; }
+    .toast.error { background: var(--danger); color: white; }
+    .toast.warning { background: var(--warning); color: white; }
+
+    @keyframes toastIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ── AI badge ── */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #7c3aed, #2563eb);
+      color: white;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    .ai-badge i { width: 10px; height: 10px; }
+
+    .api-key-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 7px;
+      margin-bottom: 14px;
+    }
+
+    .api-key-status.ok { background: var(--success-light); color: var(--success); }
+    .api-key-status.missing { background: var(--gray-100); color: var(--gray-500); }
+    .api-key-status i { width: 13px; height: 13px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 800px) {
+      .columns { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .header { flex-wrap: wrap; gap: 10px; }
+      .header-stats { display: none; }
+      .container { padding: 12px 14px 40px; }
+    }
+
+    @media (max-width: 500px) {
+      .header-actions .btn span { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     HEADER
+═══════════════════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">
+      <i data-lucide="film"></i>
+      Videotéka
+    </div>
+    <span class="header-stats" id="stats">0 ke shlédnutí · 0 viděno</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="exportData()">
+      <i data-lucide="download"></i>
+      <span>Export</span>
+    </button>
+    <label class="btn btn-secondary" style="cursor:pointer;">
+      <i data-lucide="upload"></i>
+      <span>Import</span>
+      <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+    </label>
+    <button class="btn btn-secondary" id="settings-btn" onclick="openSettings()" title="Nastavení Claude API">
+      <i data-lucide="settings-2"></i>
+      <span id="settings-btn-label">AI</span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════
+     MAIN
+═══════════════════════════════════════ -->
+<div class="container">
+
+  <!-- Formulář přidání videa -->
+  <div class="add-form">
+    <div class="add-form-title">Přidat video</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>YouTube URL *</label>
+        <input class="form-input" type="text" id="input-url"
+               placeholder="https://youtube.com/watch?v=..."
+               onkeydown="if(event.key==='Enter') addVideo()">
+      </div>
+      <div class="form-group">
+        <label>Popis (volitelný)</label>
+        <input class="form-input" type="text" id="input-desc"
+               placeholder="Poznámky ke videu..."
+               onkeydown="if(event.key==='Enter') addVideo()">
+      </div>
+      <div class="form-group">
+        <label>Štítky (čárkou)</label>
+        <input class="form-input" type="text" id="input-tags"
+               placeholder="tutorial, python, ai"
+               onkeydown="if(event.key==='Enter') addVideo()">
+      </div>
+      <div>
+        <button class="btn btn-primary" id="add-btn" onclick="addVideo()">
+          <i data-lucide="plus"></i>
+          Přidat
+        </button>
+      </div>
+    </div>
+    <div class="form-error" id="form-error" style="display:none">
+      <i data-lucide="alert-circle" style="width:13px;height:13px;"></i>
+      <span id="form-error-text"></span>
+    </div>
+  </div>
+
+  <!-- Vyhledávání a filtry -->
+  <div class="search-section">
+    <div class="search-wrap">
+      <i data-lucide="search" class="search-icon"></i>
+      <input class="search-input" type="text" id="search-input"
+             placeholder="Hledat v názvech, popisech a štítcích..."
+             oninput="render()">
+    </div>
+    <div class="tag-filters" id="tag-filters"></div>
+  </div>
+
+  <!-- Dvě kolonky -->
+  <div class="columns">
+    <!-- Ke shlédnutí -->
+    <div class="column" data-status="to-watch">
+      <div class="column-header">
+        <i data-lucide="bookmark" class="column-icon" style="color:var(--primary)"></i>
+        <span class="column-title">Ke shlédnutí</span>
+        <span class="column-count" id="count-to-watch">0</span>
+      </div>
+      <div class="drop-zone" id="drop-to-watch"
+           ondragover="onZoneDragOver(event)"
+           ondrop="onZoneDrop(event,'to-watch')"
+           ondragleave="onZoneDragLeave(event)"
+           ondragenter="onZoneDragEnter(event)">
+        <div class="empty-state" id="empty-to-watch">
+          <i data-lucide="video"></i>
+          <p>Přidej první video vložením YouTube URL nahoře</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Viděno -->
+    <div class="column" data-status="watched">
+      <div class="column-header">
+        <i data-lucide="check-circle" class="column-icon" style="color:var(--success)"></i>
+        <span class="column-title">Viděno</span>
+        <span class="column-count" id="count-watched">0</span>
+      </div>
+      <div class="drop-zone" id="drop-watched"
+           ondragover="onZoneDragOver(event)"
+           ondrop="onZoneDrop(event,'watched')"
+           ondragleave="onZoneDragLeave(event)"
+           ondragenter="onZoneDragEnter(event)">
+        <div class="empty-state" id="empty-watched">
+          <i data-lucide="check-circle-2"></i>
+          <p>Přesuň sem videa, která jsi viděla</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL — Přehrávač
+═══════════════════════════════════════ -->
+<div class="modal-overlay" id="player-modal" style="display:none" onclick="handlePlayerOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="player-title"></span>
+      <a class="btn btn-secondary" id="player-yt-link" href="#" target="_blank" rel="noopener" title="Otevřít na YouTube">
+        <i data-lucide="external-link"></i> YouTube
+      </a>
+      <button class="btn btn-ghost" onclick="closePlayer()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Embed přehrávač (funguje pouze při otevření přes HTTP server) -->
+      <iframe class="video-embed" id="player-iframe" allowfullscreen
+              allow="autoplay; encrypted-media; picture-in-picture"
+              referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <!-- Fallback pro file:// protokol -->
+      <div id="player-fallback" style="display:none; aspect-ratio:16/9; background:#000; border-radius:8px; display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+        <p style="color:#9ca3af; font-size:13px; text-align:center; padding:0 20px;">
+          YouTube embed nefunguje při otevření souboru přímo (file://).<br>
+          Spusť aplikaci přes HTTP server nebo otevři video na YouTube.
+        </p>
+        <a id="player-fallback-link" href="#" target="_blank" rel="noopener" class="btn btn-primary">
+          <i data-lucide="play"></i> Otevřít na YouTube
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL — Editace
+═══════════════════════════════════════ -->
+<div class="modal-overlay" id="edit-modal" style="display:none" onclick="handleEditOverlayClick(event)">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <span class="modal-title">Upravit video</span>
+      <button class="btn btn-ghost" onclick="closeEdit()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="edit-group">
+        <label>Název</label>
+        <input type="text" id="edit-title" placeholder="Název videa">
+      </div>
+      <div class="edit-group">
+        <label>Popis</label>
+        <textarea id="edit-desc" rows="3" placeholder="Poznámky ke videu..."></textarea>
+      </div>
+      <div class="edit-group">
+        <label>Štítky (čárkou)</label>
+        <input type="text" id="edit-tags" placeholder="tutorial, python">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEdit()">Zrušit</button>
+      <button class="btn btn-primary" onclick="saveEdit()">
+        <i data-lucide="save"></i> Uložit
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL — Nastavení Claude API
+═══════════════════════════════════════ -->
+<div class="modal-overlay" id="settings-modal" style="display:none" onclick="handleSettingsOverlayClick(event)">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <span class="modal-title">Nastavení AI obohacení</span>
+      <button class="btn btn-ghost" onclick="closeSettings()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="api-key-status-bar" class="api-key-status missing">
+        <i data-lucide="key"></i>
+        <span id="api-key-status-text">API klíč není nastaven</span>
+      </div>
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:14px;line-height:1.6;">
+        Po zadání klíče bude aplikace při přidání videa automaticky volat
+        <strong>Claude Haiku</strong> a doplní český popis i štítky na základě názvu videa.
+        Klíč se uloží pouze do localStorage ve tvém prohlížeči.
+      </p>
+      <div class="edit-group">
+        <label>Anthropic API klíč</label>
+        <input type="password" id="api-key-input" placeholder="sk-ant-api03-..."
+               autocomplete="off" onkeydown="if(event.key==='Enter') saveSettings()">
+      </div>
+      <p style="font-size:11px;color:var(--gray-400);margin-top:-6px;">
+        Klíč získáš na <strong>console.anthropic.com</strong> → API Keys.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="clearApiKey()" style="margin-right:auto">
+        <i data-lucide="trash-2"></i> Smazat klíč
+      </button>
+      <button class="btn btn-secondary" onclick="closeSettings()">Zrušit</button>
+      <button class="btn btn-primary" onclick="saveSettings()">
+        <i data-lucide="save"></i> Uložit
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── STORAGE ──────────────────────────────────────────────────
+const STORAGE_KEY = 'videoteka_data';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+}
+
+// ── STATE ────────────────────────────────────────────────────
+let videos = loadData();
+let activeTagFilters = new Set();
+let dragState = { id: null };
+let claudeApiKey = localStorage.getItem('videoteka_claude_key') || '';
+
+// ── YOUTUBE HELPERS ──────────────────────────────────────────
+function extractVideoId(url) {
+  const patterns = [
+    /[?&]v=([^&\n?#]+)/,           // youtube.com/watch?v=
+    /youtu\.be\/([^&\n?#/]+)/,     // youtu.be/
+    /shorts\/([^&\n?#/]+)/,        // youtube.com/shorts/
+    /embed\/([^&\n?#/]+)/,         // youtube.com/embed/
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1].trim();
+  }
+  return null;
+}
+
+function thumbUrl(videoId) {
+  return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+}
+
+async function fetchTitle(url) {
+  try {
+    const res = await fetch(
+      `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.title || null;
+  } catch {
+    return null;
+  }
+}
+
+function genId() {
+  return typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+// ── CLAUDE AI ENRICHMENT ─────────────────────────────────────
+async function fetchAiEnrichment(title, url) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': claudeApiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content:
+          `Jsi asistent pro osobní videotéku. Na základě názvu YouTube videa navrhni:\n` +
+          `1. Stručný popis v češtině (1–2 věty, věcný, bez spoilerů)\n` +
+          `2. 2–4 štítky (anglicky nebo česky, lowercase, bez diakritiky)\n\n` +
+          `Název: "${title}"\nURL: ${url}\n\n` +
+          `Odpověz POUZE jako JSON objekt, bez markdown:\n` +
+          `{"description":"...","tags":["...","..."]}`,
+      }],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const data = await res.json();
+  // Claude vrací text v content[0].text
+  const text = data.content?.[0]?.text?.trim() || '{}';
+  // Odstraníme případné markdown code fences
+  const clean = text.replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'');
+  return JSON.parse(clean);
+}
+
+// ── NASTAVENÍ API KLÍČE ───────────────────────────────────────
+function openSettings() {
+  document.getElementById('api-key-input').value = claudeApiKey;
+  updateApiKeyStatusBar();
+  document.getElementById('settings-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('api-key-input').focus(), 50);
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').style.display = 'none';
+}
+
+function handleSettingsOverlayClick(e) {
+  if (e.target === document.getElementById('settings-modal')) closeSettings();
+}
+
+function saveSettings() {
+  const key = document.getElementById('api-key-input').value.trim();
+  claudeApiKey = key;
+  if (key) localStorage.setItem('videoteka_claude_key', key);
+  else localStorage.removeItem('videoteka_claude_key');
+  updateApiKeyStatusBar();
+  updateSettingsBtn();
+  closeSettings();
+  showToast(key ? 'API klíč uložen — AI obohacení aktivní' : 'API klíč odstraněn', key ? 'success' : 'warning');
+}
+
+function clearApiKey() {
+  document.getElementById('api-key-input').value = '';
+  claudeApiKey = '';
+  localStorage.removeItem('videoteka_claude_key');
+  updateApiKeyStatusBar();
+  updateSettingsBtn();
+  closeSettings();
+  showToast('API klíč odstraněn', 'warning');
+}
+
+function updateApiKeyStatusBar() {
+  const bar  = document.getElementById('api-key-status-bar');
+  const text = document.getElementById('api-key-status-text');
+  const key  = document.getElementById('api-key-input').value.trim();
+  if (key) {
+    bar.className  = 'api-key-status ok';
+    text.textContent = 'API klíč nastaven ✓';
+  } else {
+    bar.className  = 'api-key-status missing';
+    text.textContent = 'API klíč není nastaven';
+  }
+  lucide.createIcons({ nodes: [bar] });
+}
+
+function updateSettingsBtn() {
+  const label = document.getElementById('settings-btn-label');
+  if (!label) return;
+  label.innerHTML = claudeApiKey
+    ? 'AI <span class="ai-badge" style="font-size:10px;padding:1px 5px;">✦</span>'
+    : 'AI';
+}
+
+// ── ADD VIDEO ────────────────────────────────────────────────
+async function addVideo() {
+  const urlEl   = document.getElementById('input-url');
+  const descEl  = document.getElementById('input-desc');
+  const tagsEl  = document.getElementById('input-tags');
+  const errEl   = document.getElementById('form-error');
+  const errText = document.getElementById('form-error-text');
+  const btn     = document.getElementById('add-btn');
+
+  errEl.style.display = 'none';
+
+  const url  = urlEl.value.trim();
+  const desc = descEl.value.trim();
+  const tags = tagsEl.value.split(',').map(t => t.trim()).filter(Boolean);
+
+  if (!url) {
+    showFormError('Zadej YouTube URL');
+    urlEl.focus();
+    return;
+  }
+
+  const videoId = extractVideoId(url);
+  if (!videoId) {
+    showFormError('Neplatná YouTube URL — podporuji: youtube.com/watch?v=, youtu.be/, youtube.com/shorts/');
+    urlEl.select();
+    return;
+  }
+
+  // Varování při duplicitě, ale povolíme přidat
+  const existing = videos.find(v => v.videoId === videoId);
+  if (existing) {
+    showToast('Video s tímto ID již máš v knihovně', 'warning');
+  }
+
+  // Loading stav
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> Načítám...';
+  lucide.createIcons({ nodes: [btn] });
+
+  const title = (await fetchTitle(url)) || `Video ${videoId}`;
+
+  // Pokud je API klíč nastaven a uživatel nevyplnil popis/štítky ručně, zavoláme Claude
+  let finalDesc = desc;
+  let finalTags = tags;
+
+  if (claudeApiKey && (!desc || tags.length === 0)) {
+    btn.innerHTML = '<i data-lucide="sparkles" style="animation:spin 2s linear infinite"></i> AI popis...';
+    lucide.createIcons({ nodes: [btn] });
+    try {
+      const enriched = await fetchAiEnrichment(title, url);
+      if (!desc && enriched.description) finalDesc = enriched.description;
+      if (tags.length === 0 && Array.isArray(enriched.tags)) finalTags = enriched.tags;
+    } catch (err) {
+      showToast('AI obohacení selhalo: ' + err.message, 'warning');
+    }
+  }
+
+  // Order: přidáme na konec sloupce "ke shlédnutí"
+  const colMax = videos
+    .filter(v => v.status === 'to-watch')
+    .reduce((m, v) => Math.max(m, v.order), -1);
+
+  videos.push({
+    id: genId(),
+    url,
+    videoId,
+    title,
+    description: finalDesc,
+    tags: finalTags,
+    status: 'to-watch',
+    order: colMax + 1,
+    createdAt: new Date().toISOString(),
+  });
+
+  saveData();
+  urlEl.value = '';
+  descEl.value = '';
+  tagsEl.value = '';
+
+  btn.disabled = false;
+  btn.innerHTML = '<i data-lucide="plus"></i> Přidat';
+
+  showToast(`"${title}" přidáno`, 'success');
+  render();
+  urlEl.focus();
+}
+
+function showFormError(msg) {
+  document.getElementById('form-error-text').textContent = msg;
+  document.getElementById('form-error').style.display = 'flex';
+}
+
+// ── FILTERING ────────────────────────────────────────────────
+function getFilteredVideos() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  return videos.filter(v => {
+    const matchQ = !q
+      || v.title.toLowerCase().includes(q)
+      || v.description.toLowerCase().includes(q)
+      || v.tags.some(t => t.toLowerCase().includes(q));
+    const matchTags = activeTagFilters.size === 0
+      || [...activeTagFilters].every(f => v.tags.includes(f));
+    return matchQ && matchTags;
+  });
+}
+
+function toggleTagFilter(tag) {
+  activeTagFilters.has(tag) ? activeTagFilters.delete(tag) : activeTagFilters.add(tag);
+  render();
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function render() {
+  const filtered = getFilteredVideos();
+  const toWatch = filtered.filter(v => v.status === 'to-watch').sort((a,b) => a.order - b.order);
+  const watched = filtered.filter(v => v.status === 'watched').sort((a,b) => a.order - b.order);
+
+  renderColumn('drop-to-watch', 'empty-to-watch', toWatch);
+  renderColumn('drop-watched',  'empty-watched',  watched);
+
+  // Počítadla (zobrazujeme filtrovaný / celkový)
+  const totalTW = videos.filter(v => v.status === 'to-watch').length;
+  const totalW  = videos.filter(v => v.status === 'watched').length;
+
+  document.getElementById('count-to-watch').textContent =
+    toWatch.length < totalTW ? `${toWatch.length} / ${totalTW}` : totalTW;
+  document.getElementById('count-watched').textContent =
+    watched.length < totalW ? `${watched.length} / ${totalW}` : totalW;
+  document.getElementById('stats').textContent =
+    `${totalTW} ke shlédnutí · ${totalW} viděno`;
+
+  // Tag chips pro filtrování
+  const allTags = [...new Set(videos.flatMap(v => v.tags))].sort();
+  const tagFiltersEl = document.getElementById('tag-filters');
+
+  if (allTags.length === 0) {
+    tagFiltersEl.innerHTML = '';
+  } else {
+    tagFiltersEl.innerHTML =
+      '<span class="tag-filter-label">Štítky:</span>' +
+      allTags.map(tag =>
+        `<button class="tag-chip ${activeTagFilters.has(tag) ? 'active' : ''}" data-tag="${esc(tag)}">${esc(tag)}</button>`
+      ).join('');
+  }
+
+  lucide.createIcons();
+}
+
+function renderColumn(zoneId, emptyId, items) {
+  const zone  = document.getElementById(zoneId);
+  const empty = document.getElementById(emptyId);
+
+  // Odstraníme staré karty, prázdný stav necháme
+  zone.querySelectorAll('.video-card').forEach(c => c.remove());
+
+  if (items.length === 0) {
+    empty.style.display = 'flex';
+  } else {
+    empty.style.display = 'none';
+    items.forEach(v => zone.appendChild(createCard(v)));
+  }
+}
+
+function createCard(v) {
+  const div = document.createElement('div');
+  div.className = 'video-card';
+  div.dataset.id = v.id;
+  div.draggable = true;
+
+  const isWatched = v.status === 'watched';
+  const toggleLabel = isWatched ? 'Přesunout ke shlédnutí' : 'Označit jako viděno';
+  const toggleIcon  = isWatched ? 'rotate-ccw' : 'check';
+
+  div.innerHTML = `
+    <div class="card-thumb-wrap" onclick="openPlayer('${v.id}')">
+      <img class="card-thumb" src="${thumbUrl(v.videoId)}" alt="${esc(v.title)}" loading="lazy"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 320 180%22><rect width=%22320%22 height=%22180%22 fill=%22%23e5e7eb%22/><text x=%22160%22 y=%2295%22 text-anchor=%22middle%22 fill=%22%239ca3af%22 font-size=%2214%22>Bez náhledu</text></svg>'">
+      <div class="card-thumb-overlay">
+        <i data-lucide="play-circle"></i>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${esc(v.title)}</div>
+      ${v.description ? `<div class="card-desc">${esc(v.description)}</div>` : ''}
+      ${v.tags.length ? `<div class="card-tags">${v.tags.map(t => `<span class="tag-badge">${esc(t)}</span>`).join('')}</div>` : ''}
+      <div class="card-actions">
+        <button class="btn btn-ghost" title="Přehrát" onclick="openPlayer('${v.id}')">
+          <i data-lucide="play"></i>
+        </button>
+        <button class="toggle-watched-btn" title="${toggleLabel}" onclick="toggleStatus('${v.id}')">
+          <i data-lucide="${toggleIcon}"></i>
+        </button>
+        <button class="btn btn-ghost" title="Upravit" onclick="openEdit('${v.id}')">
+          <i data-lucide="pencil"></i>
+        </button>
+        <span class="card-spacer"></span>
+        <button class="btn btn-danger" title="Smazat" onclick="deleteVideo('${v.id}')">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+    </div>
+  `;
+
+  div.addEventListener('dragstart', e => onCardDragStart(e, v.id));
+  div.addEventListener('dragend',   onCardDragEnd);
+  div.addEventListener('dragover',  onCardDragOver);
+  div.addEventListener('dragleave', onCardDragLeave);
+  div.addEventListener('drop',      e => onCardDrop(e, v.id));
+
+  return div;
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ── DRAG & DROP ──────────────────────────────────────────────
+
+// Karta — začátek dragu
+function onCardDragStart(e, id) {
+  dragState.id = id;
+  e.dataTransfer.effectAllowed = 'move';
+  // Malé zpoždění, aby se karta nejdříve vykreslila jako "dragging"
+  requestAnimationFrame(() => {
+    const card = document.querySelector(`.video-card[data-id="${id}"]`);
+    if (card) card.classList.add('dragging');
+  });
+}
+
+// Karta — konec dragu (cleanup)
+function onCardDragEnd() {
+  document.querySelectorAll('.video-card').forEach(c => {
+    c.classList.remove('dragging', 'drop-before', 'drop-after');
+  });
+  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+  dragState.id = null;
+}
+
+// Karta — přetažení PŘES jinou kartu
+function onCardDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.dataTransfer.dropEffect = 'move';
+
+  const target = e.currentTarget;
+  if (!dragState.id || target.dataset.id === dragState.id) return;
+
+  // Vizuální indikace — horní nebo dolní polovina karty
+  const rect = target.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  document.querySelectorAll('.video-card').forEach(c => c.classList.remove('drop-before', 'drop-after'));
+  target.classList.add(e.clientY < midY ? 'drop-before' : 'drop-after');
+}
+
+function onCardDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    e.currentTarget.classList.remove('drop-before', 'drop-after');
+  }
+}
+
+// Drop NA kartu — vložení před nebo za
+function onCardDrop(e, targetId) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const target = e.currentTarget;
+  target.classList.remove('drop-before', 'drop-after');
+
+  if (!dragState.id || dragState.id === targetId) return;
+
+  const src = videos.find(v => v.id === dragState.id);
+  const tgt = videos.find(v => v.id === targetId);
+  if (!src || !tgt) return;
+
+  // Zjistíme, do které části karty jsme pustili
+  const rect = target.getBoundingClientRect();
+  const insertBefore = e.clientY < rect.top + rect.height / 2;
+
+  src.status = tgt.status;
+
+  // Sestavíme nové pořadí v cílové koloně
+  const col = videos
+    .filter(v => v.status === tgt.status && v.id !== src.id)
+    .sort((a,b) => a.order - b.order);
+
+  const idx = col.findIndex(v => v.id === targetId);
+  col.splice(insertBefore ? idx : idx + 1, 0, src);
+  col.forEach((v, i) => v.order = i);
+
+  saveData();
+  render();
+}
+
+// Drop zone — dragover (celá kolonka)
+function onZoneDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function onZoneDragEnter(e) {
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onZoneDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+
+// Drop na prázdnou část kolonky — přidáme na konec
+function onZoneDrop(e, targetStatus) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+
+  if (!dragState.id) return;
+
+  const src = videos.find(v => v.id === dragState.id);
+  if (!src) return;
+
+  src.status = targetStatus;
+
+  // Přidáme na konec kolonky
+  const colMax = videos
+    .filter(v => v.status === targetStatus && v.id !== src.id)
+    .reduce((m, v) => Math.max(m, v.order), -1);
+  src.order = colMax + 1;
+
+  saveData();
+  render();
+}
+
+// ── PLAYER ──────────────────────────────────────────────────
+function openPlayer(id) {
+  const v = videos.find(v => v.id === id);
+  if (!v) return;
+
+  const ytUrl      = `https://www.youtube.com/watch?v=${v.videoId}`;
+  const embedUrl   = `https://www.youtube.com/embed/${v.videoId}?autoplay=1`;
+  const iframe     = document.getElementById('player-iframe');
+  const fallback   = document.getElementById('player-fallback');
+  const ytLink     = document.getElementById('player-yt-link');
+  const fbLink     = document.getElementById('player-fallback-link');
+
+  document.getElementById('player-title').textContent = v.title;
+  ytLink.href = ytUrl;
+  fbLink.href = ytUrl;
+
+  // file:// neumožňuje YouTube embed — zobrazíme fallback
+  if (location.protocol === 'file:') {
+    iframe.style.display   = 'none';
+    fallback.style.display = 'flex';
+    iframe.src = '';
+  } else {
+    iframe.style.display   = 'block';
+    fallback.style.display = 'none';
+    iframe.src = embedUrl;
+  }
+
+  document.getElementById('player-modal').style.display = 'flex';
+  lucide.createIcons();
+}
+
+function closePlayer() {
+  document.getElementById('player-modal').style.display = 'none';
+  document.getElementById('player-iframe').src = '';
+}
+
+function handlePlayerOverlayClick(e) {
+  if (e.target === document.getElementById('player-modal')) closePlayer();
+}
+
+// ── EDITACE ──────────────────────────────────────────────────
+function openEdit(id) {
+  const v = videos.find(v => v.id === id);
+  if (!v) return;
+  document.getElementById('edit-id').value    = id;
+  document.getElementById('edit-title').value = v.title;
+  document.getElementById('edit-desc').value  = v.description;
+  document.getElementById('edit-tags').value  = v.tags.join(', ');
+  document.getElementById('edit-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('edit-title').focus(), 50);
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+function handleEditOverlayClick(e) {
+  if (e.target === document.getElementById('edit-modal')) closeEdit();
+}
+
+function saveEdit() {
+  const id = document.getElementById('edit-id').value;
+  const v  = videos.find(v => v.id === id);
+  if (!v) return;
+
+  v.title       = document.getElementById('edit-title').value.trim() || v.title;
+  v.description = document.getElementById('edit-desc').value.trim();
+  v.tags        = document.getElementById('edit-tags').value
+                    .split(',').map(t => t.trim()).filter(Boolean);
+
+  saveData();
+  closeEdit();
+  showToast('Video upraveno', 'success');
+  render();
+}
+
+// ── PŘEPNUTÍ STATUSU ─────────────────────────────────────────
+function toggleStatus(id) {
+  const v = videos.find(v => v.id === id);
+  if (!v) return;
+
+  const newStatus = v.status === 'to-watch' ? 'watched' : 'to-watch';
+
+  const colMax = videos
+    .filter(vid => vid.status === newStatus)
+    .reduce((m, vid) => Math.max(m, vid.order), -1);
+
+  v.status = newStatus;
+  v.order  = colMax + 1;
+
+  saveData();
+  render();
+}
+
+// ── SMAZÁNÍ ──────────────────────────────────────────────────
+function deleteVideo(id) {
+  const v = videos.find(v => v.id === id);
+  if (!v) return;
+  if (!confirm(`Smazat "${v.title}"?\n\nTato akce je nevratná.`)) return;
+
+  videos = videos.filter(v => v.id !== id);
+  saveData();
+  render();
+  showToast('Video smazáno', 'success');
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────────
+function exportData() {
+  const json = JSON.stringify(videos, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `videoteka_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Data exportována', 'success');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Neplatný formát souboru');
+
+      const existingIds = new Set(videos.map(v => v.videoId));
+      const newVids     = imported.filter(v => v.videoId && !existingIds.has(v.videoId));
+      const skipped     = imported.length - newVids.length;
+
+      if (!confirm(
+        `Import: ${imported.length} videí celkem\n` +
+        `Nová: ${newVids.length} · Přeskočena (duplikáty): ${skipped}\n\n` +
+        `Pokračovat?`
+      )) return;
+
+      videos = [...videos, ...newVids];
+      saveData();
+      render();
+      showToast(`Importováno ${newVids.length} videí`, 'success');
+    } catch (err) {
+      showToast('Chyba při importu: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';   // Reset input pro možnost opakovaného importu
+}
+
+// ── NOTIFIKACE ────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const icons = { success: 'check-circle', error: 'alert-circle', warning: 'alert-triangle' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<i data-lucide="${icons[type] || 'info'}"></i> ${esc(msg)}`;
+  document.body.appendChild(el);
+  lucide.createIcons({ nodes: [el] });
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.3s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
+// ── KLÁVESOVÉ ZKRATKY ─────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closePlayer();
+    closeEdit();
+    closeSettings();
+  }
+});
+
+// Delegace kliknutí na tag chips (přidáno jednou)
+document.getElementById('tag-filters').addEventListener('click', e => {
+  const chip = e.target.closest('[data-tag]');
+  if (chip) toggleTagFilter(chip.dataset.tag);
+});
+
+// CSS pro animaci loaderu
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+
+// ── INICIALIZACE ──────────────────────────────────────────────
+updateSettingsBtn();
+render();
+</script>
+</body>
+</html>
