@@ -549,6 +549,91 @@
       box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
     }
 
+    /* ── Tag input (edit modal) ── */
+    .tag-input-wrap {
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      padding: 5px 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+      cursor: text;
+      transition: all 0.15s;
+      min-height: 38px;
+    }
+
+    .tag-input-wrap:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+    }
+
+    .tag-input-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 5px 2px 8px;
+      border-radius: 20px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .tag-input-chip button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--primary);
+      padding: 0 1px;
+      border-radius: 50%;
+      font-size: 15px;
+      line-height: 1;
+      opacity: 0.55;
+      font-family: inherit;
+    }
+
+    .tag-input-chip button:hover { opacity: 1; }
+
+    .tag-input-text {
+      flex: 1;
+      min-width: 100px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--gray-900);
+      background: transparent;
+      padding: 2px 2px;
+    }
+
+    .tag-suggestions {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-top: 4px;
+      overflow: hidden;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
+    .tag-suggestion-item {
+      padding: 7px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--gray-700);
+    }
+
+    .tag-suggestion-item:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
     /* ── Toast notifications ── */
     .toast {
       position: fixed;
@@ -799,8 +884,12 @@
         <textarea id="edit-desc" rows="3" placeholder="Poznámky ke videu..."></textarea>
       </div>
       <div class="edit-group">
-        <label>Štítky (čárkou)</label>
-        <input type="text" id="edit-tags" placeholder="tutorial, python">
+        <label>Štítky</label>
+        <div class="tag-input-wrap" id="tag-input-wrap">
+          <input type="text" class="tag-input-text" id="edit-tags-input"
+                 placeholder="Přidat štítek, potvrdit Enterem...">
+        </div>
+        <div class="tag-suggestions" id="tag-suggestions" style="display:none"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -877,6 +966,7 @@ let videos = loadData();
 let activeTagFilters = new Set();
 let dragState = { id: null };
 let claudeApiKey = localStorage.getItem('videosalon_claude_key') || '';
+let editTagsState = [];
 
 // ── YOUTUBE HELPERS ──────────────────────────────────────────
 function extractVideoId(url) {
@@ -1393,13 +1483,16 @@ function openEdit(id) {
   document.getElementById('edit-id').value    = id;
   document.getElementById('edit-title').value = v.title;
   document.getElementById('edit-desc').value  = v.description;
-  document.getElementById('edit-tags').value  = v.tags.join(', ');
+  editTagsState = [...v.tags];
+  renderEditTags();
   document.getElementById('edit-modal').style.display = 'flex';
   setTimeout(() => document.getElementById('edit-title').focus(), 50);
 }
 
 function closeEdit() {
   document.getElementById('edit-modal').style.display = 'none';
+  document.getElementById('edit-tags-input').value = '';
+  hideSuggestions();
 }
 
 function handleEditOverlayClick(e) {
@@ -1411,15 +1504,67 @@ function saveEdit() {
   const v  = videos.find(v => v.id === id);
   if (!v) return;
 
+  // Zpracuj případný nevyplněný text v inputu
+  const pending = document.getElementById('edit-tags-input').value.trim();
+  if (pending) {
+    pending.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
+      .forEach(t => { if (!editTagsState.includes(t)) editTagsState.push(t); });
+  }
+
   v.title       = document.getElementById('edit-title').value.trim() || v.title;
   v.description = document.getElementById('edit-desc').value.trim();
-  v.tags        = document.getElementById('edit-tags').value
-                    .split(',').map(t => t.trim()).filter(Boolean);
+  v.tags        = [...editTagsState];
 
   saveData();
   closeEdit();
   showToast('Video upraveno', 'success');
   render();
+}
+
+function renderEditTags() {
+  const wrap  = document.getElementById('tag-input-wrap');
+  const input = document.getElementById('edit-tags-input');
+  wrap.querySelectorAll('.tag-input-chip').forEach(c => c.remove());
+  editTagsState.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-input-chip';
+    const label = document.createTextNode(tag);
+    const btn   = document.createElement('button');
+    btn.type = 'button';
+    btn.title = 'Odebrat';
+    btn.textContent = '×';
+    btn.dataset.tag = tag;
+    chip.appendChild(label);
+    chip.appendChild(btn);
+    wrap.insertBefore(chip, input);
+  });
+}
+
+function addEditTag(raw) {
+  raw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
+    .forEach(t => { if (!editTagsState.includes(t)) editTagsState.push(t); });
+  document.getElementById('edit-tags-input').value = '';
+  renderEditTags();
+  hideSuggestions();
+}
+
+function showTagSuggestions(query) {
+  const box = document.getElementById('tag-suggestions');
+  if (!query) { hideSuggestions(); return; }
+  const allTags = [...new Set(videos.flatMap(v => v.tags))];
+  const matches = allTags.filter(t =>
+    t.toLowerCase().includes(query.toLowerCase()) && !editTagsState.includes(t)
+  );
+  if (matches.length === 0) { hideSuggestions(); return; }
+  box.innerHTML = matches
+    .map(t => `<div class="tag-suggestion-item" data-suggest="${esc(t)}">${esc(t)}</div>`)
+    .join('');
+  box.style.display = 'block';
+}
+
+function hideSuggestions() {
+  const box = document.getElementById('tag-suggestions');
+  if (box) box.style.display = 'none';
 }
 
 // ── PŘEPNUTÍ STATUSU ─────────────────────────────────────────
@@ -1533,6 +1678,41 @@ document.getElementById('tag-filters').addEventListener('click', e => {
 const style = document.createElement('style');
 style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
 document.head.appendChild(style);
+
+// ── TAG INPUT EVENT LISTENERY ────────────────────────────────
+document.getElementById('edit-tags-input').addEventListener('keydown', e => {
+  const val = e.target.value.trim();
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    if (val) addEditTag(val);
+  } else if (e.key === 'Backspace' && val === '' && editTagsState.length > 0) {
+    editTagsState.pop();
+    renderEditTags();
+  }
+});
+
+document.getElementById('edit-tags-input').addEventListener('input', e => {
+  showTagSuggestions(e.target.value);
+});
+
+document.getElementById('edit-tags-input').addEventListener('blur', () => {
+  setTimeout(hideSuggestions, 150);
+});
+
+document.getElementById('tag-input-wrap').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tag]');
+  if (btn) {
+    editTagsState = editTagsState.filter(t => t !== btn.dataset.tag);
+    renderEditTags();
+  } else {
+    document.getElementById('edit-tags-input').focus();
+  }
+});
+
+document.getElementById('tag-suggestions').addEventListener('click', e => {
+  const item = e.target.closest('[data-suggest]');
+  if (item) addEditTag(item.dataset.suggest);
+});
 
 // ── INICIALIZACE ──────────────────────────────────────────────
 updateSettingsBtn();
