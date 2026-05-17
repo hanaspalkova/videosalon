@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Videotéka</title>
+  <title>VideoSalon</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -627,7 +627,7 @@
   <div class="header-left">
     <div class="header-logo">
       <i data-lucide="film"></i>
-      Videotéka
+      VideoSalon
     </div>
     <span class="header-stats" id="stats">0 ke shlédnutí · 0 viděno</span>
   </div>
@@ -858,7 +858,7 @@
 'use strict';
 
 // ── STORAGE ──────────────────────────────────────────────────
-const STORAGE_KEY = 'videoteka_data';
+const STORAGE_KEY = 'videosalon_data';
 
 function loadData() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -873,7 +873,7 @@ function saveData() {
 let videos = loadData();
 let activeTagFilters = new Set();
 let dragState = { id: null };
-let claudeApiKey = localStorage.getItem('videoteka_claude_key') || '';
+let claudeApiKey = localStorage.getItem('videosalon_claude_key') || '';
 
 // ── YOUTUBE HELPERS ──────────────────────────────────────────
 function extractVideoId(url) {
@@ -967,8 +967,8 @@ function handleSettingsOverlayClick(e) {
 function saveSettings() {
   const key = document.getElementById('api-key-input').value.trim();
   claudeApiKey = key;
-  if (key) localStorage.setItem('videoteka_claude_key', key);
-  else localStorage.removeItem('videoteka_claude_key');
+  if (key) localStorage.setItem('videosalon_claude_key', key);
+  else localStorage.removeItem('videosalon_claude_key');
   updateApiKeyStatusBar();
   updateSettingsBtn();
   closeSettings();
@@ -978,7 +978,7 @@ function saveSettings() {
 function clearApiKey() {
   document.getElementById('api-key-input').value = '';
   claudeApiKey = '';
-  localStorage.removeItem('videoteka_claude_key');
+  localStorage.removeItem('videosalon_claude_key');
   updateApiKeyStatusBar();
   updateSettingsBtn();
   closeSettings();
@@ -1456,7 +1456,7 @@ function exportData() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `videoteka_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `videosalon_${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
