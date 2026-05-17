@@ -333,6 +333,8 @@
       cursor: grab;
       transition: box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
       user-select: none;
+      display: flex;
+      flex-direction: row;
     }
 
     .video-card:last-child { margin-bottom: 0; }
@@ -352,8 +354,11 @@
       position: relative;
       cursor: pointer;
       overflow: hidden;
+      width: 25%;
+      flex-shrink: 0;
       aspect-ratio: 16/9;
       background: var(--gray-200);
+      align-self: stretch;
     }
 
     .card-thumb {
@@ -375,11 +380,11 @@
       transition: opacity 0.15s;
     }
 
-    .card-thumb-overlay i { width: 36px; height: 36px; color: white; }
+    .card-thumb-overlay i { width: 24px; height: 24px; color: white; }
 
     .card-thumb-wrap:hover .card-thumb-overlay { opacity: 1; }
 
-    .card-body { padding: 10px 12px; }
+    .card-body { padding: 10px 12px; flex: 1; min-width: 0; }
 
     .card-title {
       font-size: 13px;
